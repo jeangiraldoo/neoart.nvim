@@ -52,7 +52,6 @@ function Workspace:set_canvas_keymap(keymap, callback)
 		self:refresh_toolbar()
 	end)
 end
-
 function Workspace:refresh_toolbar()
 	local toolbar_config = require("neoart.config").toolbar
 	local buf = self.buf_ids.toolbar
@@ -60,73 +59,61 @@ function Workspace:refresh_toolbar()
 
 	vim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)
 
-	local first_line, second_line = "", ""
-	local is_first = true
-	local col_cursor = 0
-
-	local tool_position = (self.toolset.is_active and toolbar_config.tool_active_char or "")
 	local current_tool_state = self.toolset.state[self.toolset.current]
+	local tool_position = (self.toolset.is_active and toolbar_config.tool_active_char or "")
 
-	local colours = {}
-	if current_tool_state._BG then colours.BG = current_tool_state._BG end
-	local data = {
-		{ tool = self.toolset.current .. tool_position },
-		current_tool_state,
-		colours,
-	}
+	local first_line, second_line
+	do
+		local tool = self.toolset.current .. tool_position
+		local width = #tool
 
-	local swatches = {}
+		first_line = center("tool", width)
+		second_line = center(tool, width)
+	end
 
-	for _, item in ipairs(data) do
-		for name, val in pairs(item) do
-			if name:sub(1, 1) == "_" then goto skip end
+	for item_name, item_data in pairs(current_tool_state) do
+		if item_data.display_on_toolbar == false then goto skip end
+		if item_name == "BG" or item_name == "FG" then goto skip end
 
-			val = tostring(val)
-			local width = math.max(#name, #val)
+		local val = tostring(item_data.val)
+		local width = math.max(#item_name, #val)
 
-			local name_centered = center(name, width)
-			local val_centered = center(val, width)
+		first_line = first_line .. "  " .. center(item_name, width)
+		second_line = second_line .. "  " .. center(val, width)
 
-			if not is_first then
-				first_line = first_line .. "  "
-				second_line = second_line .. "  "
-				col_cursor = col_cursor + 2
-			end
-
-			local start_col = col_cursor
-			local end_col = col_cursor + width
-
-			first_line = first_line .. name_centered
-			second_line = second_line .. val_centered
-
-			if name == "BG" and current_tool_state._BG then
-				local color = current_tool_state._BG
-				local hl = "NeoartBG_" .. color:gsub("#", "")
-
-				vim.api.nvim_set_hl(0, hl, { bg = color })
-
-				table.insert(swatches, {
-					row = 1,
-					start = start_col,
-					width = width,
-					hl = hl,
-				})
-			end
-
-			col_cursor = end_col
-			is_first = false
-
-			::skip::
-		end
+		::skip::
 	end
 
 	vim.api.nvim_buf_set_lines(buf, 0, -1, false, { first_line, second_line })
 
-	for _, s in ipairs(swatches) do
-		vim.api.nvim_buf_set_extmark(buf, ns, s.row, s.start, {
-			virt_text = { { " ", s.hl } },
+	local col = #second_line
+
+	local function append_color(label, color, hl_opts, char)
+		local width = #label
+
+		vim.api.nvim_buf_set_text(buf, 0, col, 0, col, { "  " .. label })
+		vim.api.nvim_buf_set_text(buf, 1, col, 1, col, { "  " .. string.rep(" ", width) })
+
+		col = col + 2
+		local start_col = col
+
+		local hl = "NeoArt_" .. label .. "_" .. color:gsub("#", "")
+		vim.api.nvim_set_hl(0, hl, hl_opts)
+
+		vim.api.nvim_buf_set_extmark(buf, ns, 1, start_col, {
+			virt_text = { { string.rep(char, width), hl } },
 			virt_text_pos = "overlay",
 		})
+
+		col = col + width
+	end
+
+	if current_tool_state.BG then
+		append_color("BG", current_tool_state.BG.val, { bg = current_tool_state.BG.val }, " ")
+	end
+
+	if current_tool_state.FG then
+		append_color("FG", current_tool_state.FG.val, { fg = current_tool_state.FG.val }, "█")
 	end
 end
 

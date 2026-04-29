@@ -51,7 +51,8 @@ return {
 				local col = vim.api.nvim_win_get_cursor(0)[2] + 1 -- 1-based column
 
 				local toolset = workspace_obj.toolset
-				toolset.state[toolset.current].char = vim.api.nvim_get_current_line():sub(col, col)
+				toolset.state[toolset.current].char.val =
+					vim.api.nvim_get_current_line():sub(col, col)
 
 				workspace_obj:refresh_toolbar()
 				vim.api.nvim_win_close(win_id, true)
@@ -61,19 +62,20 @@ return {
 			local toolset = workspace_obj.toolset
 			local current_tool_state = toolset.state[toolset.current]
 
-			current_tool_state.size = current_tool_state.size + current_tool_state._size_increment
+			current_tool_state.size.val = current_tool_state.size.val
+				+ current_tool_state.size_increment.val
 		end,
 		["td"] = function(workspace_obj)
 			local bg_color = vim.fn.input { prompt = "BG color: " }
 
 			local toolset = workspace_obj.toolset
-			toolset.state[toolset.current]._BG = bg_color
+			toolset.state[toolset.current].BG.val = bg_color
 		end,
 		["tf"] = function(workspace_obj)
 			local fg_color = vim.fn.input { prompt = "FG color: " }
 
 			local toolset = workspace_obj.toolset
-			toolset.state[toolset.current]._FG = fg_color
+			toolset.state[toolset.current].FG.val = fg_color
 		end,
 
 		["tc"] = function(workspace_obj)
