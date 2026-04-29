@@ -11,7 +11,7 @@ return {
 		local dimensions = eraser_state.size
 		for i = 0, dimensions - 1, 1 do
 			for j = 0, dimensions - 1, 1 do
-				canvas[one_based_row + i][one_based_col + j] = " "
+				canvas[one_based_row + i][one_based_col + j] = { char = " ", _BG = nil, _FG = nil }
 			end
 		end
 
