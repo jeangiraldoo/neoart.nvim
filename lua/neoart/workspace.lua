@@ -1,11 +1,10 @@
 local Workspace = {}
 Workspace.__index = Workspace
-
 local function center(str, width)
-	local len = #str
-	if len >= width then return str end
+	local display_len = vim.fn.strdisplaywidth(str)
+	if display_len >= width then return str end
 
-	local total_pad = width - len
+	local total_pad = width - display_len
 	local left_pad = math.floor(total_pad / 2)
 	local right_pad = total_pad - left_pad
 
@@ -68,9 +67,10 @@ function Workspace:refresh_toolbar()
 	local first_line, second_line
 	do
 		local tool = self.toolset.current .. tool_position
-		local width = #tool
+		local tool_header = "tool"
+		local width = math.max(vim.fn.strchars(tool), vim.fn.strchars(tool_header))
 
-		first_line = center("tool", width)
+		first_line = center(tool_header, width)
 		second_line = center(tool, width)
 	end
 
@@ -79,7 +79,7 @@ function Workspace:refresh_toolbar()
 		if item_name == "BG" or item_name == "FG" then goto skip end
 
 		local val = tostring(item_data.val)
-		local width = math.max(#item_name, #val)
+		local width = math.max(vim.fn.strchars(item_name), vim.fn.strchars(val))
 
 		first_line = first_line .. "  " .. center(item_name, width)
 		second_line = second_line .. "  " .. center(val, width)
@@ -89,16 +89,22 @@ function Workspace:refresh_toolbar()
 
 	vim.api.nvim_buf_set_lines(buf, 0, -1, false, { first_line, second_line })
 
-	local col = #second_line
-
 	local function append_color(label, color, hl_opts, char)
-		local width = #label
+		local width = vim.fn.strchars(label)
 
-		vim.api.nvim_buf_set_text(buf, 0, col, 0, col, { "  " .. label })
-		vim.api.nvim_buf_set_text(buf, 1, col, 1, col, { "  " .. string.rep(" ", width) })
+		local line0 = vim.api.nvim_buf_get_lines(buf, 0, 1, false)[1]
+		local line1 = vim.api.nvim_buf_get_lines(buf, 1, 2, false)[1]
 
-		col = col + 2
-		local start_col = col
+		local col0 = #line0
+		local col1 = #line1
+
+		vim.api.nvim_buf_set_text(buf, 0, col0, 0, col0, { "  " .. label })
+		vim.api.nvim_buf_set_text(buf, 1, col1, 1, col1, { "  " .. string.rep(" ", width) })
+
+		line1 = vim.api.nvim_buf_get_lines(buf, 1, 2, false)[1]
+		local new_col1 = #line1
+
+		local start_col = new_col1 - width
 
 		local hl = "NeoArt_" .. label .. "_" .. color:gsub("#", "")
 		vim.api.nvim_set_hl(0, hl, hl_opts)
@@ -107,8 +113,6 @@ function Workspace:refresh_toolbar()
 			virt_text = { { string.rep(char, width), hl } },
 			virt_text_pos = "overlay",
 		})
-
-		col = col + width
 	end
 
 	if current_tool_state.BG then
@@ -195,8 +199,6 @@ function Workspace.new(dimensions)
 
 	new_workspace.canvas =
 		create_canvas(cols, rows, config.canvas.fill, new_workspace.buf_ids.canvas)
-
-	-- print(vim.inspect(new_workspace.canvas))
 
 	---Setups the toolbar
 	vim.cmd "topleft split"
