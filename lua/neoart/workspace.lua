@@ -120,7 +120,7 @@ end
 function Workspace:use_current_tool()
 	local config = require "neoart.config"
 
-	local tool_implementation = config.tools[self.toolset.current]
+	local tool_implementation = config.actions[self.toolset.current]
 
 	if not (tool_implementation and self.toolset.is_active) then return end
 
@@ -202,17 +202,21 @@ function Workspace.new(dimensions)
 	vim.api.nvim_win_set_buf(0, new_workspace.buf_ids.canvas)
 	vim.api.nvim_set_current_buf(new_workspace.buf_ids.canvas)
 
-	for tool_name, tool_opts in pairs(config.tools) do
-		new_workspace.toolset.state[tool_name] = vim.deepcopy(tool_opts.starter_state)
+	for action_name, tool_opts in pairs(config.actions) do
+		local is_tool = tool_opts.starter_state ~= nil
 
-		new_workspace:set_canvas_keymap(tool_opts.keymap, function()
-			new_workspace.toolset.current = tool_name
-			new_workspace.toolset.is_active = false
-		end)
-	end
-
-	for keymap, callback in pairs(config.state_ops) do
-		new_workspace:set_canvas_keymap(keymap, function() callback(new_workspace) end)
+		if is_tool then
+			new_workspace.toolset.state[action_name] = vim.deepcopy(tool_opts.starter_state)
+			new_workspace:set_canvas_keymap(tool_opts.keymap, function()
+				new_workspace.toolset.current = action_name
+				new_workspace.toolset.is_active = false
+			end)
+		else
+			new_workspace:set_canvas_keymap(
+				tool_opts.keymap,
+				function() tool_opts.use(new_workspace) end
+			)
+		end
 	end
 
 	vim.api.nvim_create_autocmd("CursorMoved", {
