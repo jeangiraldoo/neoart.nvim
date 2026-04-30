@@ -13,7 +13,9 @@ return {
 		},
 	},
 	toolbar = {
-		tool_active_char = "↓",
+		char = {
+			tool_active = "↓",
+		},
 	},
 	default_tool = "pencil",
 	actions = vim.iter(vim.fs.dir(vim.fs.joinpath(dir, "actions")))

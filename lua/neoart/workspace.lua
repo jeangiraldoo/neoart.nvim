@@ -62,7 +62,7 @@ function Workspace:refresh_toolbar()
 	vim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)
 
 	local current_tool_state = self.toolset.state[self.toolset.current]
-	local tool_position = (self.toolset.is_active and toolbar_config.tool_active_char or "")
+	local tool_position = (self.toolset.is_active and toolbar_config.char.tool_active or "")
 
 	local first_line, second_line
 	do
