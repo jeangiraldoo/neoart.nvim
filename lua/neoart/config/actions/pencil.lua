@@ -13,11 +13,11 @@ return {
 			val = 1,
 			display_on_toolbar = false,
 		},
-		BG = {
+		bg = {
 			val = "#F54927",
 			display_on_toolbar = false,
 		},
-		FG = {
+		fg = {
 			val = "#27F557",
 			display_on_toolbar = false,
 		},
@@ -31,8 +31,8 @@ return {
 			for j = 0, dimensions - 1, 1 do
 				canvas[row + i][col + j] = {
 					char = state.char.val,
-					BG = state.BG.val,
-					FG = state.FG.val,
+					bg = state.bg.val,
+					fg = state.fg.val,
 				}
 			end
 		end

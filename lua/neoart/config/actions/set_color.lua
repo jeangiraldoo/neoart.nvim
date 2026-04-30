@@ -8,7 +8,7 @@ return {
 		}, function(choice)
 			local color = vim.fn.input { prompt = choice .. " color: " }
 
-			toolset.state[toolset.current][choice:upper()].val = color
+			toolset.state[toolset.current][choice].val = color
 		end)
 	end,
 }

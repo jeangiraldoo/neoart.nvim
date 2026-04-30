@@ -18,7 +18,7 @@ return {
 
 		for i = 0, dimensions - 1, 1 do
 			for j = 0, dimensions - 1, 1 do
-				canvas[one_based_row + i][one_based_col + j] = { char = " ", _BG = nil, _FG = nil }
+				canvas[one_based_row + i][one_based_col + j] = { char = " ", bg = nil, fg = nil }
 			end
 		end
 

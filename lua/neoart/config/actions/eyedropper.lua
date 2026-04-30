@@ -12,10 +12,10 @@ return {
 		}, function(choice)
 			local cell_under_cursor = workspace_obj.canvas[one_based_row][one_based_col]
 
-			local cell_color = cell_under_cursor[choice:upper()]
+			local cell_color = cell_under_cursor[choice]
 			vim.ui.select({ "fg", "bg" }, {
 				prompt = "Set as:",
-			}, function(target) current_tool_state[target:upper()].val = cell_color end)
+			}, function(target) current_tool_state[target].val = cell_color end)
 		end)
 	end,
 }

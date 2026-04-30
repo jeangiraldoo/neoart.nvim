@@ -38,8 +38,8 @@ local function create_canvas(cols, rows, fill, buf_id)
 		for j = 1, cols do
 			row[j] = {
 				char = fill.char or " ",
-				BG = fill.color.bg,
-				FG = fill.color.fg,
+				bg = fill.color.bg,
+				fg = fill.color.fg,
 			}
 		end
 		canvas[i] = row
@@ -76,7 +76,7 @@ function Workspace:refresh_toolbar()
 
 	for item_name, item_data in pairs(current_tool_state) do
 		if item_data.display_on_toolbar == false then goto skip end
-		if item_name == "BG" or item_name == "FG" then goto skip end
+		if item_name == "bg" or item_name == "fg" then goto skip end
 
 		local val = tostring(item_data.val)
 		local width = math.max(vim.fn.strchars(item_name), vim.fn.strchars(val))
@@ -115,20 +115,20 @@ function Workspace:refresh_toolbar()
 		})
 	end
 
-	if current_tool_state.BG then
+	if current_tool_state.bg then
 		append_color(
-			"BG",
-			current_tool_state.BG.val,
-			{ bg = current_tool_state.BG.val },
+			"bg",
+			current_tool_state.bg.val,
+			{ bg = current_tool_state.bg.val },
 			toolbar_config.char.current_color.bg
 		)
 	end
 
-	if current_tool_state.FG then
+	if current_tool_state.fg then
 		append_color(
-			"FG",
-			current_tool_state.FG.val,
-			{ fg = current_tool_state.FG.val },
+			"fg",
+			current_tool_state.fg.val,
+			{ fg = current_tool_state.fg.val },
 			toolbar_config.char.current_color.fg
 		)
 	end
@@ -173,7 +173,7 @@ function Workspace:refresh_canvas()
 		for j = 1, #self.canvas[r] do
 			local cell = self.canvas[r][j]
 
-			local hl = (cell.BG and cell.FG) and get_bg_hl(cell.BG, cell.FG) or "Normal"
+			local hl = (cell.bg and cell.fg) and get_bg_hl(cell.bg, cell.fg) or "Normal"
 
 			cell.mark_id = vim.api.nvim_buf_set_extmark(canvas_buf_id, ns_id, r - 1, j - 1, {
 				virt_text = { { cell.char, hl } },
