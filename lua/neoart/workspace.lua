@@ -27,18 +27,21 @@ end
 local function create_canvas(cols, rows, fill, buf_id)
 	local buf_lines = {}
 	for r = 1, rows do
-		buf_lines[r] = fill:rep(cols)
+		buf_lines[r] = string.rep(" ", cols)
 	end
 
 	vim.api.nvim_buf_set_lines(buf_id, 0, -1, false, buf_lines)
 
 	local canvas = {}
-	fill = fill or " "
 
 	for i = 1, rows do
 		local row = {}
 		for j = 1, cols do
-			row[j] = { char = fill }
+			row[j] = {
+				char = fill.char or " ",
+				BG = fill.color.bg,
+				FG = fill.color.fg,
+			}
 		end
 		canvas[i] = row
 	end
@@ -192,6 +195,8 @@ function Workspace.new(dimensions)
 
 	new_workspace.canvas =
 		create_canvas(cols, rows, config.canvas.fill, new_workspace.buf_ids.canvas)
+
+	-- print(vim.inspect(new_workspace.canvas))
 
 	---Setups the toolbar
 	vim.cmd "topleft split"

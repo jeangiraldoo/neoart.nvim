@@ -4,7 +4,13 @@ return {
 	canvas = {
 		cols = 100,
 		rows = 30,
-		fill = " ",
+		fill = {
+			char = " ",
+			color = {
+				fg = "",
+				bg = "",
+			},
+		},
 	},
 	toolbar = {
 		tool_active_char = "↓",
