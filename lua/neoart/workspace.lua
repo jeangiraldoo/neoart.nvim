@@ -116,11 +116,21 @@ function Workspace:refresh_toolbar()
 	end
 
 	if current_tool_state.BG then
-		append_color("BG", current_tool_state.BG.val, { bg = current_tool_state.BG.val }, " ")
+		append_color(
+			"BG",
+			current_tool_state.BG.val,
+			{ bg = current_tool_state.BG.val },
+			toolbar_config.char.current_color.bg
+		)
 	end
 
 	if current_tool_state.FG then
-		append_color("FG", current_tool_state.FG.val, { fg = current_tool_state.FG.val }, "█")
+		append_color(
+			"FG",
+			current_tool_state.FG.val,
+			{ fg = current_tool_state.FG.val },
+			toolbar_config.char.current_color.fg
+		)
 	end
 end
 

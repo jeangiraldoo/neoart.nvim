@@ -15,6 +15,10 @@ return {
 	toolbar = {
 		char = {
 			tool_active = "↓",
+			current_color = {
+				fg = "█",
+				bg = " ",
+			},
 		},
 	},
 	default_tool = "pencil",
