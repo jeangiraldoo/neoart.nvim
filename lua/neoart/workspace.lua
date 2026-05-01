@@ -137,13 +137,45 @@ end
 function Workspace:use_current_tool()
 	local config = require "neoart.config"
 
-	local pos = self.current_cursor_pos
 	local tool_implementation = config.actions[self.toolset.current]
 
 	if not (tool_implementation and self.toolset.is_active) then return end
 
-	local cells_to_change =
-		tool_implementation.use(self.toolset.state[self.toolset.current], self.prev, pos)
+	local pos = self.current_cursor_pos
+
+	local moved_horizontally = self.prev.pos.col ~= pos.col
+
+	local cells_to_change = {}
+	if not moved_horizontally and self.prev.is_active then
+		local step = pos.row <= self.prev.pos.row and -1 or 1
+
+		for row = self.prev.pos.row, pos.row, step do
+			vim.list_extend(
+				cells_to_change,
+				tool_implementation.use(
+					self.toolset.state[self.toolset.current],
+					{ row = row, col = pos.col }
+				)
+			)
+		end
+	elseif self.prev.is_active then
+		local step = pos.col <= self.prev.pos.col and -1 or 1
+
+		for col = self.prev.pos.col, pos.col, step do
+			vim.list_extend(
+				cells_to_change,
+				tool_implementation.use(
+					self.toolset.state[self.toolset.current],
+					{ row = pos.row, col = col }
+				)
+			)
+		end
+	else
+		vim.list_extend(
+			cells_to_change,
+			tool_implementation.use(self.toolset.state[self.toolset.current], pos)
+		)
+	end
 
 	if cells_to_change then self:refresh_canvas(cells_to_change) end
 end
@@ -236,6 +268,7 @@ function Workspace.new(dimensions)
 			new_workspace:set_canvas_keymap(tool_opts.keymap, function()
 				new_workspace.toolset.current = action_name
 				new_workspace.toolset.is_active = false
+				new_workspace.prev.is_active = false
 			end)
 		else
 			new_workspace:set_canvas_keymap(

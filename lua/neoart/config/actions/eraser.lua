@@ -10,7 +10,7 @@ return {
 			display_on_toolbar = false,
 		},
 	},
-	use = function(eraser_state, _, pos)
+	use = function(eraser_state, pos)
 		if not pos then return end
 
 		local dimensions = eraser_state.size.val
