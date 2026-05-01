@@ -61,12 +61,12 @@ function Workspace:refresh_toolbar()
 
 	vim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)
 
-	local current_tool_state = self.state.current.toolset[self.state.current.action_name]
+	local current_tool_state = self.state.current.toolset[self.state.current.tool_name]
 	local tool_position = (self.state.current.is_active and toolbar_config.char.tool_active or "")
 
 	local first_line, second_line
 	do
-		local tool = self.state.current.action_name .. tool_position
+		local tool = self.state.current.tool_name .. tool_position
 		local tool_header = "tool"
 		local width = math.max(vim.fn.strchars(tool), vim.fn.strchars(tool_header))
 
@@ -137,7 +137,7 @@ end
 function Workspace:use_current_tool()
 	local config = require "neoart.config"
 
-	local tool_implementation = config.actions[self.state.current.action_name]
+	local tool_implementation = config.tools.impls[self.state.current.tool_name]
 
 	if not (tool_implementation and self.state.current.is_active) then return end
 
@@ -174,7 +174,7 @@ function Workspace:use_current_tool()
 	for _, p in ipairs(positions) do
 		vim.list_extend(
 			cells_to_change,
-			tool_implementation.use(self.state.current.toolset[self.state.current.action_name], p)
+			tool_implementation.use(self.state.current.toolset[self.state.current.tool_name], p)
 		)
 	end
 
@@ -238,8 +238,11 @@ function Workspace.new(dimensions)
 
 	local config = require "neoart.config"
 
-	local cols = dimensions and dimensions.cols or config.canvas.cols
-	local rows = dimensions and dimensions.rows or config.canvas.rows
+	local canvas_config = config.canvas
+	local tools_config = config.tools
+
+	local cols = dimensions and dimensions.cols or canvas_config.cols
+	local rows = dimensions and dimensions.rows or canvas_config.rows
 
 	local new_workspace = setmetatable({
 		ids = {
@@ -261,7 +264,7 @@ function Workspace.new(dimensions)
 					col = vim.api.nvim_win_get_cursor(0)[2] + 1,
 					row = vim.api.nvim_win_get_cursor(0)[1],
 				},
-				action_name = config.tools.default,
+				tool_name = tools_config.default,
 				toolset = {},
 				is_active = false,
 			},
@@ -269,7 +272,7 @@ function Workspace.new(dimensions)
 	}, Workspace)
 
 	new_workspace.canvas =
-		create_canvas(cols, rows, config.canvas.fill, new_workspace.ids.canvas_buf)
+		create_canvas(cols, rows, canvas_config.fill, new_workspace.ids.canvas_buf)
 
 	---Setups the toolbar
 	vim.cmd "topleft split"
@@ -280,38 +283,38 @@ function Workspace.new(dimensions)
 	vim.api.nvim_win_set_buf(0, new_workspace.ids.canvas_buf)
 	vim.api.nvim_set_current_buf(new_workspace.ids.canvas_buf)
 
-	local tools_config = config.tools
-	if tools_config.keys.activate then
-		new_workspace:set_canvas_keymap(
-			tools_config.keys.activate,
-			function() new_workspace:activate_current_tool() end
-		)
-	end
+	local keys = {
+		activate = function() new_workspace:activate_current_tool() end,
+		deactivate = function() new_workspace.state.current.is_active = false end,
+	}
 
-	if tools_config.keys.deactivate then
-		new_workspace:set_canvas_keymap(
-			tools_config.keys.deactivate,
-
-			function() new_workspace.state.current.is_active = false end
-		)
-	end
-
-	for action_name, tool_opts in pairs(config.actions) do
-		local is_tool = tool_opts.starter_state ~= nil
-
-		if is_tool then
-			new_workspace.state.current.toolset[action_name] = vim.deepcopy(tool_opts.starter_state)
-			new_workspace:set_canvas_keymap(tool_opts.keymap, function()
-				new_workspace.state.current.action_name = action_name
-				new_workspace.state.current.is_active = false
-				new_workspace.state.prev.is_active = false
-			end)
-		else
-			new_workspace:set_canvas_keymap(
-				tool_opts.keymap,
-				function() tool_opts.use(new_workspace) end
-			)
+	for key, value in pairs(tools_config.keys) do
+		if keys[key] and type(value) == "string" then
+			new_workspace:set_canvas_keymap(value, keys[key])
 		end
+	end
+
+	for name, keymap in pairs(tools_config.keys.state_handlers) do
+		new_workspace:set_canvas_keymap(keymap, function()
+			local thing = tools_config.impls[new_workspace.state.current.tool_name]
+			local state_handlers = thing.state_handlers
+
+			if state_handlers[name] then
+				state_handlers[name](
+					new_workspace.state.current.toolset[new_workspace.state.current.tool_name],
+					function() new_workspace:refresh_toolbar() end,
+					new_workspace.canvas
+				)
+			end
+		end)
+	end
+
+	for key, value in pairs(tools_config.impls) do
+		new_workspace.state.current.toolset[key] = vim.deepcopy(value.starter_state)
+		new_workspace:set_canvas_keymap(
+			value.keymap,
+			function() new_workspace.state.current.tool_name = key end
+		)
 	end
 
 	vim.api.nvim_create_autocmd("CursorMoved", {

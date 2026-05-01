@@ -26,17 +26,23 @@ return {
 		keys = {
 			activate = "<Space>",
 			deactivate = "<Esc>",
+			state_handlers = {
+				char = "tp",
+				size = "zb",
+				color = "ty",
+				eyedropper = "tx",
+			},
 		},
-	},
-	actions = vim.iter(vim.fs.dir(vim.fs.joinpath(dir, "actions")))
-		:fold({}, function(acc, name, type)
-			if type == "file" then
-				local action_name = name:gsub("%.lua$", "")
-				acc[action_name] = require("neoart.config.actions." .. action_name)
-			end
+		impls = vim.iter(vim.fs.dir(vim.fs.joinpath(dir, "tools")))
+			:fold({}, function(acc, name, type)
+				if type == "file" then
+					local tool_name = name:gsub("%.lua$", "")
+					acc[tool_name] = require("neoart.config.tools." .. tool_name)
+				end
 
-			return acc
-		end),
+				return acc
+			end),
+	},
 	chars = {
 		"abcdefghijklmnopqrstuvwxyz",
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZ",

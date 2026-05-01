@@ -1,31 +1,22 @@
 return {
-	keymap = "t",
+	keymap = "e",
 	starter_state = {
 		size = {
 			val = 1,
-			display_on_toolbar = true,
-		},
-		char = {
-			val = " ",
 			display_on_toolbar = true,
 		},
 		size_increment = {
 			val = 1,
 			display_on_toolbar = false,
 		},
-		bg = {
-			val = "#F54927",
-			display_on_toolbar = false,
-		},
-		fg = {
-			val = "#27F557",
-			display_on_toolbar = false,
-		},
 	},
-	use = function(state, pos)
+	state_handlers = {
+		size = function(state) return state.size.val + state.size_increment.val end,
+	},
+	use = function(eraser_state, pos)
 		if not pos then return end
 
-		local dimensions = state.size.val
+		local dimensions = eraser_state.size.val
 
 		local list = {}
 		for i = 0, dimensions - 1, 1 do
@@ -33,9 +24,9 @@ return {
 				table.insert(list, {
 					y = pos.row + i,
 					x = pos.col + j,
-					char = state.char.val,
-					bg = state.bg.val,
-					fg = state.fg.val,
+					char = " ",
+					bg = nil,
+					fg = nil,
 				})
 			end
 		end
