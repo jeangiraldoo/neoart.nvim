@@ -1,4 +1,4 @@
 return {
 	keymap = "<Esc>",
-	use = function(workspace_obj) workspace_obj.toolset.is_active = false end,
+	use = function(workspace_obj) workspace_obj.state.current.is_active = false end,
 }

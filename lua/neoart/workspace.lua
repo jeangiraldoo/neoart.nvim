@@ -61,12 +61,12 @@ function Workspace:refresh_toolbar()
 
 	vim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)
 
-	local current_tool_state = self.toolset.state[self.toolset.current]
-	local tool_position = (self.toolset.is_active and toolbar_config.char.tool_active or "")
+	local current_tool_state = self.state.current.toolset[self.state.current.action_name]
+	local tool_position = (self.state.current.is_active and toolbar_config.char.tool_active or "")
 
 	local first_line, second_line
 	do
-		local tool = self.toolset.current .. tool_position
+		local tool = self.state.current.action_name .. tool_position
 		local tool_header = "tool"
 		local width = math.max(vim.fn.strchars(tool), vim.fn.strchars(tool_header))
 
@@ -137,35 +137,37 @@ end
 function Workspace:use_current_tool()
 	local config = require "neoart.config"
 
-	local tool_implementation = config.actions[self.toolset.current]
+	local tool_implementation = config.actions[self.state.current.action_name]
 
-	if not (tool_implementation and self.toolset.is_active) then return end
+	if not (tool_implementation and self.state.current.is_active) then return end
 
-	local pos = self.current_cursor_pos
+	local current_state, prev_state = self.state.current, self.state.prev
 
-	local moved_horizontally = self.prev.pos.col ~= pos.col
+	local pos = current_state.pos
+
+	local moved_horizontally = prev_state.pos.col ~= pos.col
 
 	local cells_to_change = {}
-	if not moved_horizontally and self.prev.is_active then
-		local step = pos.row <= self.prev.pos.row and -1 or 1
+	if not moved_horizontally and prev_state.is_active then
+		local step = pos.row <= prev_state.pos.row and -1 or 1
 
-		for row = self.prev.pos.row, pos.row, step do
+		for row = prev_state.pos.row, pos.row, step do
 			vim.list_extend(
 				cells_to_change,
 				tool_implementation.use(
-					self.toolset.state[self.toolset.current],
+					self.state.current.toolset[self.state.current.action_name],
 					{ row = row, col = pos.col }
 				)
 			)
 		end
-	elseif self.prev.is_active then
-		local step = pos.col <= self.prev.pos.col and -1 or 1
+	elseif prev_state.is_active then
+		local step = pos.col <= prev_state.pos.col and -1 or 1
 
-		for col = self.prev.pos.col, pos.col, step do
+		for col = prev_state.pos.col, pos.col, step do
 			vim.list_extend(
 				cells_to_change,
 				tool_implementation.use(
-					self.toolset.state[self.toolset.current],
+					self.state.current.toolset[self.state.current.action_name],
 					{ row = pos.row, col = col }
 				)
 			)
@@ -173,7 +175,7 @@ function Workspace:use_current_tool()
 	else
 		vim.list_extend(
 			cells_to_change,
-			tool_implementation.use(self.toolset.state[self.toolset.current], pos)
+			tool_implementation.use(self.state.current.toolset[self.state.current.action_name], pos)
 		)
 	end
 
@@ -228,23 +230,29 @@ function Workspace.new(dimensions)
 	local rows = dimensions and dimensions.rows or config.canvas.rows
 
 	local new_workspace = setmetatable({
-		toolset = {
-			current = config.default_tool,
-			is_active = false,
-			state = {},
-		},
 		buf_ids = {
 			canvas = create_buf(),
 			toolbar = create_buf(),
 		},
 		ns_id = vim.api.nvim_create_namespace "neoart",
-		prev = {
-			pos = {
+		state = {
+			prev = {
+				pos = {
 
-				col = vim.api.nvim_win_get_cursor(0)[2] + 1,
-				row = vim.api.nvim_win_get_cursor(0)[1],
+					col = vim.api.nvim_win_get_cursor(0)[2] + 1,
+					row = vim.api.nvim_win_get_cursor(0)[1],
+				},
+				is_active = false,
 			},
-			is_active = false,
+			current = {
+				pos = {
+					col = vim.api.nvim_win_get_cursor(0)[2] + 1,
+					row = vim.api.nvim_win_get_cursor(0)[1],
+				},
+				action_name = config.default_tool,
+				toolset = {},
+				is_active = false,
+			},
 		},
 	}, Workspace)
 
@@ -264,11 +272,11 @@ function Workspace.new(dimensions)
 		local is_tool = tool_opts.starter_state ~= nil
 
 		if is_tool then
-			new_workspace.toolset.state[action_name] = vim.deepcopy(tool_opts.starter_state)
+			new_workspace.state.current.toolset[action_name] = vim.deepcopy(tool_opts.starter_state)
 			new_workspace:set_canvas_keymap(tool_opts.keymap, function()
-				new_workspace.toolset.current = action_name
-				new_workspace.toolset.is_active = false
-				new_workspace.prev.is_active = false
+				new_workspace.state.current.action_name = action_name
+				new_workspace.state.current.is_active = false
+				new_workspace.state.prev.is_active = false
 			end)
 		else
 			new_workspace:set_canvas_keymap(
@@ -281,9 +289,11 @@ function Workspace.new(dimensions)
 	vim.api.nvim_create_autocmd("CursorMoved", {
 		buf = new_workspace.buf_ids.canvas,
 		callback = function()
-			new_workspace.prev = {
-				pos = new_workspace.current_cursor_pos,
-				is_active = new_workspace.toolset.is_active,
+			local state = new_workspace.state
+
+			state.prev = {
+				pos = state.current.pos,
+				is_active = state.current.is_active,
 			}
 
 			local current_cursor_pos = {
@@ -291,7 +301,7 @@ function Workspace.new(dimensions)
 				row = vim.api.nvim_win_get_cursor(0)[1],
 			}
 
-			new_workspace.current_cursor_pos = current_cursor_pos
+			state.current.pos = current_cursor_pos
 
 			new_workspace:use_current_tool()
 		end,
