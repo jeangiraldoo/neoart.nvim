@@ -261,7 +261,7 @@ function Workspace.new(dimensions)
 					col = vim.api.nvim_win_get_cursor(0)[2] + 1,
 					row = vim.api.nvim_win_get_cursor(0)[1],
 				},
-				action_name = config.default_tool,
+				action_name = config.tools.default,
 				toolset = {},
 				is_active = false,
 			},

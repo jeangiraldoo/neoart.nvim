@@ -21,8 +21,8 @@ return {
 			},
 		},
 	},
-	default_tool = "pencil",
 	tools = {
+		default = "pencil",
 		keys = {
 			activate = "<Space>",
 			deactivate = "<Esc>",
