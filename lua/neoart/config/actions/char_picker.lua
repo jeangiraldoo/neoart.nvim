@@ -26,5 +26,12 @@ return {
 			workspace_obj:refresh_toolbar()
 			vim.api.nvim_win_close(win_id, true)
 		end, { buf = buf_id })
+
+		vim.keymap.set(
+			"n",
+			"q",
+			function() vim.api.nvim_win_close(win_id, true) end,
+			{ buf = buf_id }
+		)
 	end,
 }
