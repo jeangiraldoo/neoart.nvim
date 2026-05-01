@@ -6,7 +6,7 @@ return {
 			display_on_toolbar = true,
 		},
 		char = {
-			val = "a",
+			val = " ",
 			display_on_toolbar = true,
 		},
 		size_increment = {

@@ -32,8 +32,18 @@ return {
 			return acc
 		end),
 	chars = {
-		"a",
-		"b",
-		"c",
+		"abcdefghijklmnopqrstuvwxyz",
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+		"0123456789",
+		".,:;''`~!?-_=+*/\\|",
+		"()[]{}<>",
+		" ░▒▓█",
+		"▀▄▌▐",
+		"─│┌┐└┘├┤┬┴┼",
+		"╔║╚═╝╗╠╣╦╩╬",
+		"╭╮╯╰",
+		"■□●○◆◇",
+		"↑↓←→",
+		"#%&@^$",
 	},
 }
