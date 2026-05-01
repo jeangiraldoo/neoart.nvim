@@ -56,8 +56,8 @@ function Workspace:set_canvas_keymap(keymap, callback)
 end
 function Workspace:refresh_toolbar()
 	local toolbar_config = require("neoart.config").toolbar
-	local buf = self.buf_ids.toolbar
-	local ns = self.ns_id
+	local buf = self.ids.toolbar_buf
+	local ns = self.ids.namespace
 
 	vim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)
 
@@ -197,8 +197,7 @@ local function get_bg_hl(bg, fg)
 end
 
 function Workspace:refresh_canvas(cells_changed)
-	local canvas_buf_id = self.buf_ids.canvas
-	local ns_id = vim.api.nvim_create_namespace "neoart"
+	local canvas_buf_id = self.ids.canvas_buf
 
 	for _, cell_data in ipairs(cells_changed) do
 		local cell = self.canvas[cell_data.y][cell_data.x]
@@ -208,13 +207,20 @@ function Workspace:refresh_canvas(cells_changed)
 		cell.char = cell_data.char
 		local hl = (cell.bg and cell.fg) and get_bg_hl(cell.bg, cell.fg) or "Normal"
 
-		if cell.mark_id then vim.api.nvim_buf_del_extmark(canvas_buf_id, ns_id, cell.mark_id) end
+		if cell.mark_id then
+			vim.api.nvim_buf_del_extmark(canvas_buf_id, self.ids.namespace, cell.mark_id)
+		end
 
-		cell.mark_id =
-			vim.api.nvim_buf_set_extmark(canvas_buf_id, ns_id, cell_data.y - 1, cell_data.x - 1, {
+		cell.mark_id = vim.api.nvim_buf_set_extmark(
+			canvas_buf_id,
+			self.ids.namespace,
+			cell_data.y - 1,
+			cell_data.x - 1,
+			{
 				virt_text = { { cell.char, hl } },
 				virt_text_pos = "overlay",
-			})
+			}
+		)
 	end
 
 	vim.bo[canvas_buf_id].modifiable = true
@@ -230,11 +236,11 @@ function Workspace.new(dimensions)
 	local rows = dimensions and dimensions.rows or config.canvas.rows
 
 	local new_workspace = setmetatable({
-		buf_ids = {
-			canvas = create_buf(),
-			toolbar = create_buf(),
+		ids = {
+			canvas_buf = create_buf(),
+			toolbar_buf = create_buf(),
+			namespace = vim.api.nvim_create_namespace "neoart",
 		},
-		ns_id = vim.api.nvim_create_namespace "neoart",
 		state = {
 			prev = {
 				pos = {
@@ -257,16 +263,16 @@ function Workspace.new(dimensions)
 	}, Workspace)
 
 	new_workspace.canvas =
-		create_canvas(cols, rows, config.canvas.fill, new_workspace.buf_ids.canvas)
+		create_canvas(cols, rows, config.canvas.fill, new_workspace.ids.canvas_buf)
 
 	---Setups the toolbar
 	vim.cmd "topleft split"
-	vim.api.nvim_win_set_buf(0, new_workspace.buf_ids.toolbar)
+	vim.api.nvim_win_set_buf(0, new_workspace.ids.toolbar_buf)
 	vim.cmd "resize 4"
 	vim.cmd "wincmd j" ---Goes down to the canvas
 
-	vim.api.nvim_win_set_buf(0, new_workspace.buf_ids.canvas)
-	vim.api.nvim_set_current_buf(new_workspace.buf_ids.canvas)
+	vim.api.nvim_win_set_buf(0, new_workspace.ids.canvas_buf)
+	vim.api.nvim_set_current_buf(new_workspace.ids.canvas_buf)
 
 	for action_name, tool_opts in pairs(config.actions) do
 		local is_tool = tool_opts.starter_state ~= nil
@@ -287,7 +293,7 @@ function Workspace.new(dimensions)
 	end
 
 	vim.api.nvim_create_autocmd("CursorMoved", {
-		buf = new_workspace.buf_ids.canvas,
+		buf = new_workspace.ids.canvas_buf,
 		callback = function()
 			local state = new_workspace.state
 
