@@ -147,39 +147,38 @@ function Workspace:use_current_tool()
 
 	local moved_horizontally = prev_state.pos.col ~= pos.col
 
-	local cells_to_change = {}
-	if not moved_horizontally and prev_state.is_active then
-		local step = pos.row <= prev_state.pos.row and -1 or 1
+	local positions = {}
 
-		for row = prev_state.pos.row, pos.row, step do
-			vim.list_extend(
-				cells_to_change,
-				tool_implementation.use(
-					self.state.current.toolset[self.state.current.action_name],
-					{ row = row, col = pos.col }
-				)
-			)
-		end
-	elseif prev_state.is_active then
-		local step = pos.col <= prev_state.pos.col and -1 or 1
+	if prev_state.is_active then
+		---If the tool remained active across cursor movement, it should be applied
+		---to every cell along the path between the previous and current positions
+		if not moved_horizontally then
+			local step = pos.row <= prev_state.pos.row and -1 or 1
 
-		for col = prev_state.pos.col, pos.col, step do
-			vim.list_extend(
-				cells_to_change,
-				tool_implementation.use(
-					self.state.current.toolset[self.state.current.action_name],
-					{ row = pos.row, col = col }
-				)
-			)
+			for row = prev_state.pos.row, pos.row, step do
+				table.insert(positions, { row = row, col = pos.col })
+			end
+		else
+			local step = pos.col <= prev_state.pos.col and -1 or 1
+
+			for col = prev_state.pos.col, pos.col, step do
+				table.insert(positions, { row = pos.row, col = col })
+			end
 		end
 	else
+		table.insert(positions, pos)
+	end
+
+	local cells_to_change = {}
+
+	for _, p in ipairs(positions) do
 		vim.list_extend(
 			cells_to_change,
-			tool_implementation.use(self.state.current.toolset[self.state.current.action_name], pos)
+			tool_implementation.use(self.state.current.toolset[self.state.current.action_name], p)
 		)
 	end
 
-	if cells_to_change then self:refresh_canvas(cells_to_change) end
+	if #cells_to_change > 0 then self:refresh_canvas(cells_to_change) end
 end
 
 local function get_bg_hl(bg, fg)
