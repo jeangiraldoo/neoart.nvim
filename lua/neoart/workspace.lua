@@ -134,7 +134,7 @@ function Workspace:refresh_toolbar()
 	end
 end
 
-function Workspace:use_current_tool()
+function Workspace:use_current_tool(pos)
 	local config = require "neoart.config"
 
 	local tool_implementation = config.actions[self.toolset.current]
@@ -142,7 +142,9 @@ function Workspace:use_current_tool()
 	if not (tool_implementation and self.toolset.is_active) then return end
 
 	local cells_to_change =
-		tool_implementation.use(self.toolset.state[self.toolset.current], self.prev)
+		tool_implementation.use(self.toolset.state[self.toolset.current], self.prev, pos)
+
+	-- print(vim.inspect(cells_to_change))
 
 	if cells_to_change then self:refresh_canvas(cells_to_change) end
 end
@@ -172,6 +174,8 @@ function Workspace:refresh_canvas(cells_changed)
 		cell.fg = cell_data.fg
 		cell.char = cell_data.char
 		local hl = (cell.bg and cell.fg) and get_bg_hl(cell.bg, cell.fg) or "Normal"
+
+		if cell.mark_id then vim.api.nvim_buf_del_extmark(canvas_buf_id, ns_id, cell.mark_id) end
 
 		cell.mark_id =
 			vim.api.nvim_buf_set_extmark(canvas_buf_id, ns_id, cell_data.y - 1, cell_data.x - 1, {
@@ -205,8 +209,9 @@ function Workspace.new(dimensions)
 		ns_id = vim.api.nvim_create_namespace "neoart",
 		prev = {
 			pos = {
-				col = nil,
-				row = nil,
+
+				col = vim.api.nvim_win_get_cursor(0)[2] + 1,
+				row = vim.api.nvim_win_get_cursor(0)[1],
 			},
 			is_active = false,
 		},
@@ -244,12 +249,15 @@ function Workspace.new(dimensions)
 	vim.api.nvim_create_autocmd("CursorMoved", {
 		buf = new_workspace.buf_ids.canvas,
 		callback = function()
-			new_workspace:use_current_tool()
+			local current_cursor_pos = {
+				col = vim.api.nvim_win_get_cursor(0)[2] + 1,
+				row = vim.api.nvim_win_get_cursor(0)[1],
+			}
+
+			new_workspace:use_current_tool(current_cursor_pos)
+
 			new_workspace.prev = {
-				pos = {
-					col = vim.api.nvim_win_get_cursor(0)[2] + 1,
-					row = vim.api.nvim_win_get_cursor(0)[1],
-				},
+				pos = current_cursor_pos,
 				is_active = new_workspace.toolset.is_active,
 			}
 		end,

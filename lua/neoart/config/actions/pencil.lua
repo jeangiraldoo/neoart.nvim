@@ -22,11 +22,9 @@ return {
 			display_on_toolbar = false,
 		},
 	},
-	use = function(state, prev)
-		local cursor_col = vim.api.nvim_win_get_cursor(0)[2] + 1 -- 1-based column
-		local cursor_row = vim.api.nvim_win_get_cursor(0)[1] -- 1-based column
-
-		local moved_horizontally = prev.pos.col ~= cursor_col
+	use = function(state, prev, pos)
+		if not pos then return end
+		local moved_horizontally = prev.pos.col ~= pos.col
 
 		local dimensions = state.size.val
 		local list = {}
@@ -45,16 +43,16 @@ return {
 		end
 
 		if not moved_horizontally then
-			local step = cursor_row <= prev.pos.row and -1 or 1
+			local step = pos.row <= prev.pos.row and -1 or 1
 
-			for row = prev.pos.row, cursor_row, step do
-				add(cursor_col, row)
+			for row = prev.pos.row, pos.row, step do
+				add(pos.col, row)
 			end
 		else
-			local step = cursor_col <= prev.pos.col and -1 or 1
+			local step = pos.col <= prev.pos.col and -1 or 1
 
-			for col = prev.pos.col, cursor_col, step do
-				add(col, cursor_row)
+			for col = prev.pos.col, pos.col, step do
+				add(col, pos.row)
 			end
 		end
 
