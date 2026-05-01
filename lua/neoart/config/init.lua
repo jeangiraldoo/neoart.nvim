@@ -22,6 +22,12 @@ return {
 		},
 	},
 	default_tool = "pencil",
+	tools = {
+		keys = {
+			activate = "<Space>",
+			deactivate = "<Esc>",
+		},
+	},
 	actions = vim.iter(vim.fs.dir(vim.fs.joinpath(dir, "actions")))
 		:fold({}, function(acc, name, type)
 			if type == "file" then

@@ -195,6 +195,13 @@ local function get_bg_hl(bg, fg)
 	return name
 end
 
+function Workspace:activate_current_tool()
+	self.state.current.is_active = true
+
+	---Applies the tool to the current cell; otherwise it runs only after the next cursor movement
+	self:use_current_tool()
+end
+
 function Workspace:refresh_canvas(cells_changed)
 	local canvas_buf_id = self.ids.canvas_buf
 
@@ -272,6 +279,22 @@ function Workspace.new(dimensions)
 
 	vim.api.nvim_win_set_buf(0, new_workspace.ids.canvas_buf)
 	vim.api.nvim_set_current_buf(new_workspace.ids.canvas_buf)
+
+	local tools_config = config.tools
+	if tools_config.keys.activate then
+		new_workspace:set_canvas_keymap(
+			tools_config.keys.activate,
+			function() new_workspace:activate_current_tool() end
+		)
+	end
+
+	if tools_config.keys.deactivate then
+		new_workspace:set_canvas_keymap(
+			tools_config.keys.deactivate,
+
+			function() new_workspace.state.current.is_active = false end
+		)
+	end
 
 	for action_name, tool_opts in pairs(config.actions) do
 		local is_tool = tool_opts.starter_state ~= nil
