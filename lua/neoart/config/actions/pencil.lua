@@ -22,21 +22,24 @@ return {
 			display_on_toolbar = false,
 		},
 	},
-	use = function(canvas, state)
+	use = function(state)
 		local col = vim.api.nvim_win_get_cursor(0)[2] + 1 -- 1-based column
 		local row = vim.api.nvim_win_get_cursor(0)[1] -- 1-based column
 
+		local list = {}
 		local dimensions = state.size.val
 		for i = 0, dimensions - 1, 1 do
 			for j = 0, dimensions - 1, 1 do
-				canvas[row + i][col + j] = {
+				table.insert(list, {
+					y = row + i,
+					x = col + j,
 					char = state.char.val,
 					bg = state.bg.val,
 					fg = state.fg.val,
-				}
+				})
 			end
 		end
 
-		return canvas
+		return list
 	end,
 }

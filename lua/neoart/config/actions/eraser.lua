@@ -10,18 +10,25 @@ return {
 			display_on_toolbar = false,
 		},
 	},
-	use = function(canvas, eraser_state)
+	use = function(eraser_state)
 		local one_based_col = vim.api.nvim_win_get_cursor(0)[2] + 1
 		local one_based_row = vim.api.nvim_win_get_cursor(0)[1]
 
 		local dimensions = eraser_state.size.val
 
+		local list = {}
 		for i = 0, dimensions - 1, 1 do
 			for j = 0, dimensions - 1, 1 do
-				canvas[one_based_row + i][one_based_col + j] = { char = " ", bg = nil, fg = nil }
+				table.insert(list, {
+					y = one_based_row + i,
+					x = one_based_col + j,
+					char = " ",
+					bg = nil,
+					fg = nil,
+				})
 			end
 		end
 
-		return canvas
+		return list
 	end,
 }

@@ -141,13 +141,9 @@ function Workspace:use_current_tool()
 
 	if not (tool_implementation and self.toolset.is_active) then return end
 
-	local new_canvas = tool_implementation.use(
-		self.canvas,
-		self.toolset.state[self.toolset.current]
-	) or self.canvas
+	local cells_to_change = tool_implementation.use(self.toolset.state[self.toolset.current])
 
-	self.canvas = new_canvas
-	self:refresh_canvas()
+	if cells_to_change then self:refresh_canvas(cells_to_change) end
 end
 
 local function get_bg_hl(bg, fg)
@@ -164,22 +160,23 @@ local function get_bg_hl(bg, fg)
 	return name
 end
 
-function Workspace:refresh_canvas()
+function Workspace:refresh_canvas(cells_changed)
 	local canvas_buf_id = self.buf_ids.canvas
 	local ns_id = vim.api.nvim_create_namespace "neoart"
-	vim.api.nvim_buf_clear_namespace(canvas_buf_id, ns_id, 0, -1)
 
-	for r = 1, #self.canvas do
-		for j = 1, #self.canvas[r] do
-			local cell = self.canvas[r][j]
+	for _, cell_data in ipairs(cells_changed) do
+		local cell = self.canvas[cell_data.y][cell_data.x]
 
-			local hl = (cell.bg and cell.fg) and get_bg_hl(cell.bg, cell.fg) or "Normal"
+		cell.bg = cell_data.bg
+		cell.fg = cell_data.fg
+		cell.char = cell_data.char
+		local hl = (cell.bg and cell.fg) and get_bg_hl(cell.bg, cell.fg) or "Normal"
 
-			cell.mark_id = vim.api.nvim_buf_set_extmark(canvas_buf_id, ns_id, r - 1, j - 1, {
+		cell.mark_id =
+			vim.api.nvim_buf_set_extmark(canvas_buf_id, ns_id, cell_data.y - 1, cell_data.x - 1, {
 				virt_text = { { cell.char, hl } },
 				virt_text_pos = "overlay",
 			})
-		end
 	end
 
 	vim.bo[canvas_buf_id].modifiable = true
@@ -241,7 +238,7 @@ function Workspace.new(dimensions)
 		callback = function() new_workspace:use_current_tool() end,
 	})
 
-	new_workspace:refresh_canvas()
+	new_workspace:refresh_canvas {}
 	new_workspace:refresh_toolbar()
 
 	return new_workspace
