@@ -13,7 +13,6 @@ return {
 	use = function(eraser_state, _, pos)
 		if not pos then return end
 
-		print(vim.inspect(pos))
 		local dimensions = eraser_state.size.val
 
 		local list = {}
@@ -28,7 +27,6 @@ return {
 				})
 			end
 		end
-		-- print(vim.inspect(list))
 
 		return list
 	end,

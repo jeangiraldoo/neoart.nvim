@@ -42,18 +42,20 @@ return {
 			end
 		end
 
-		if not moved_horizontally then
+		if not moved_horizontally and prev.is_active then
 			local step = pos.row <= prev.pos.row and -1 or 1
 
 			for row = prev.pos.row, pos.row, step do
 				add(pos.col, row)
 			end
-		else
+		elseif prev.is_active then
 			local step = pos.col <= prev.pos.col and -1 or 1
 
 			for col = prev.pos.col, pos.col, step do
 				add(col, pos.row)
 			end
+		else
+			add(pos.col, pos.row)
 		end
 
 		return list

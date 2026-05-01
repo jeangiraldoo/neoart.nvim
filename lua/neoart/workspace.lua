@@ -134,17 +134,16 @@ function Workspace:refresh_toolbar()
 	end
 end
 
-function Workspace:use_current_tool(pos)
+function Workspace:use_current_tool()
 	local config = require "neoart.config"
 
+	local pos = self.current_cursor_pos
 	local tool_implementation = config.actions[self.toolset.current]
 
 	if not (tool_implementation and self.toolset.is_active) then return end
 
 	local cells_to_change =
 		tool_implementation.use(self.toolset.state[self.toolset.current], self.prev, pos)
-
-	-- print(vim.inspect(cells_to_change))
 
 	if cells_to_change then self:refresh_canvas(cells_to_change) end
 end
@@ -249,17 +248,19 @@ function Workspace.new(dimensions)
 	vim.api.nvim_create_autocmd("CursorMoved", {
 		buf = new_workspace.buf_ids.canvas,
 		callback = function()
+			new_workspace.prev = {
+				pos = new_workspace.current_cursor_pos,
+				is_active = new_workspace.toolset.is_active,
+			}
+
 			local current_cursor_pos = {
 				col = vim.api.nvim_win_get_cursor(0)[2] + 1,
 				row = vim.api.nvim_win_get_cursor(0)[1],
 			}
 
-			new_workspace:use_current_tool(current_cursor_pos)
+			new_workspace.current_cursor_pos = current_cursor_pos
 
-			new_workspace.prev = {
-				pos = current_cursor_pos,
-				is_active = new_workspace.toolset.is_active,
-			}
+			new_workspace:use_current_tool()
 		end,
 	})
 
