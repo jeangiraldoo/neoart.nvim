@@ -93,6 +93,26 @@ function Workspace.new(dimensions)
 	local KEYS = {
 		activate = function() new_workspace:activate_current_tool() end,
 		deactivate = function() new_workspace.state.current.is_active = false end,
+		save = function()
+			vim.ui.select({ "Plain text" }, {
+				prompt = "Save format:",
+			}, function(choice)
+				if choice == "Plain text" then
+					local lines = {}
+
+					for i = 1, rows do
+						local row = ""
+						for j = 1, cols do
+							row = row .. new_workspace.ui.canvas[i][j].char
+						end
+						table.insert(lines, row)
+					end
+
+					local file_name = vim.fn.input { prompt = "File name: " }
+					vim.fn.writefile(lines, vim.fs.joinpath(vim.fn.getcwd(0), file_name))
+				end
+			end)
+		end,
 	}
 
 	for key, value in pairs(tools_config.keys) do

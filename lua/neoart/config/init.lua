@@ -26,6 +26,7 @@ return {
 		keys = {
 			activate = "<Space>",
 			deactivate = "<Esc>",
+			save = "w",
 			state_handlers = {
 				char = "tp",
 				size = "zb",
