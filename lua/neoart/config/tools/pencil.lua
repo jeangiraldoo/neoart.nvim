@@ -10,7 +10,7 @@ local function color_picker(state, refresh_toolbar)
 end
 
 return {
-	keymap = "t",
+	keymap = "i",
 	starter_state = {
 		size = {
 			val = 1,
