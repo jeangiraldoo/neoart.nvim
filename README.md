@@ -1,4 +1,27 @@
+<!-- markdownlint-disable-next-line MD033 MD041 -->
+<div align="center">
+
+![Neoart is built with lua](https://img.shields.io/badge/%20Lua-%23D0B8EB?style=for-the-badge&logo=lua)
+![When was the last commit made](https://img.shields.io/github/last-commit/jeangiraldoo/neoart.nvim?style=for-the-badge&labelColor=%232E3A59&color=%23A6D8FF)
+![Neovim version 0.12+](https://img.shields.io/badge/v0.12%2B-%238BD5CA?style=for-the-badge&logo=neovim&label=Neovim&labelColor=%232E3A59&color=%238BD5CA)
+![Neovim is under the GPL 3.0 License](https://img.shields.io/badge/GPL3.0-%232E3A59?style=for-the-badge&label=License&labelColor=%232E3A59&color=%23F4A6A6)
+![Repository size](https://img.shields.io/github/repo-size/jeangiraldoo/neoart.nvim?style=for-the-badge&logo=files&logoColor=yellow&label=SIZE&labelColor=%232E3A59&color=%23A8D8A1)
+
 # neoart.nvim
+
+</div>
+
+> I can't think of anything more rewarding than being able to express yourself to
+> others through painting. Exercising the imagination, experimenting with talents,
+> being creative; these things, to me, are truly the windows to your soul.
+> -- Bob Ross
+
+<!-- markdownlint-disable-next-line MD033 MD041 -->
+<div align="center">
+
+A creative environment for painting, making ASCII art, or whiteboard-style drawing.
+
+</div>
 
 ## Table of contents
 
