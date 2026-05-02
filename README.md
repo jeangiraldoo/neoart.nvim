@@ -10,8 +10,9 @@
 ## Features
 
 - Create canvases with specific dimensions
-- Use any of the [available tools](#tools) or define new ones
 - Use any character to draw
+- Use any of the [available tools](#tools) or define new ones
+- Combine tools with the usual vim navigation motions
 
 ## Installation
 
@@ -74,22 +75,32 @@ The plugin comes with the following built-in tools:
 
 | Name     | Description                               | Keymap | Options (default values) |
 | -------- | ----------------------------------------- | ------ | ------------------------ |
-| `pencil` | Draws a `size × size` block of characters | `i`    | `size = 1`, `char = "a"` |
+| `pencil` | Draws a `size × size` block of characters | `i`    | `size = 1`, `char = " "` |
 | `eraser` | Replaces a `size × size` area with spaces | `e`    | `size = 1`               |
 
 ### Working with state
 
-It is possible to modify the workspace state or the current tool’s state through
-functions triggered by specific keymaps.
+It is possible to modify the current tool’s state through functions triggered
+by specific keymaps.
 
 The following keymaps are predefined:
 
-| Keymap    | Description                                                             |
-| --------- | ----------------------------------------------------------------------- |
-| `<Space>` | Activates the current tool                                              |
-| `<Esc>`   | Deactivates the current tool                                            |
-| `tp`      | Opens the character picker and sets the selected character for the tool |
-| `zb`      | Increases the tool size (covers a larger area while moving)             |
+| Keymap | Description                                                                  |
+| ------ | ---------------------------------------------------------------------------- |
+| `tp`   | Open the character picker and set the selected character for the active tool |
+| `zb`   | Increases the tool size (covers a larger area while moving)                  |
+| `ty`   | Set the foreground or background color of the active tool                    |
+| `tx`   | Eyedropper: sample color under the cursor and reuse it                       |
+
+### Saving the canvas to a file
+
+Press `w` to save the canvas. You will be prompted for a file name, and the file
+will created in Neovim's current working directory.
+
+You can save in the following formats:
+
+- Plain text: Writes only the characters from the canvas to the file, discarding
+  any color information.
 
 ## Configuration
 
@@ -105,22 +116,56 @@ return {
         cols = 100,
         rows = 30,
 
-        fill = " ", -- Character to initialize each cell when the canvas is created
+        fill = { -- Default values used to initialize each cell
+            char = " ", -- Character assigned to every cell on creation
+            color = { -- Default colors applied to each cell
+                fg = "",
+                bg = "",
+            },
+        },
     },
     toolbar = { -- Toolbar options
-        tool_down_char = "↓", -- Character appended to the tool name when active
-    },
-    chars = {
-        -- See ./config/init.lua for the list of characters
+        char = {
+            tool_active = "↓", -- Character appended to the tool name when active
+            current_color = { -- Characters for the current bg and fg blocks
+                fg = "█",
+                bg = " ",
+            },
+        },
     },
     tools = {
         default = "pencil",
-        actions = { -- Maps keymap keys to functions },
-        implementations = { -- Maps tool names to their implementation functions
+        keys = {
+            activate = "<Space>",
+            deactivate = "<Esc>",
+            save = "w",
+            state_handlers = {
+                char = "tp",
+                size = "zb",
+                color = "ty",
+                eyedropper = "tx",
+            },
+        },
+        impls = { -- Maps tool names to their implementation functions
             -- See ./config/tools/ for tool implementations
         }
     },
+    chars = {
+        -- Each string is a group of related characters
+        -- Each group is displayed in a separate line when using the character picker
+        "abcdefghijklmnopqrstuvwxyz",
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "0123456789",
+        ".,:;''`~!?-_=+*/\\|",
+        "()[]{}<>",
+        " ░▒▓█",
+        "▀▄▌▐",
+        "─│┌┐└┘├┤┬┴┼",
+        "╔║╚═╝╗╠╣╦╩╬",
+        "╭╮╯╰",
+        "■□●○◆◇",
+        "↑↓←→",
+        "#%&@^$",
+    },
 }
 ```
-
-## Creating tools
