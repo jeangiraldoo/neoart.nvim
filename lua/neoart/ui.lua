@@ -176,10 +176,22 @@ function UI:refresh(cells_changed)
 	vim.api.nvim_win_set_cursor(0, vim.api.nvim_win_get_cursor(0))
 end
 
+function UI:is_canvas_pos_valid(pos)
+	vim.validate("pos", pos, "table")
+	vim.validate("pos.x", pos.x, "number")
+	vim.validate("pos.y", pos.y, "number")
+
+	local is_cell_pos_valid = pos.y > #self.canvas or pos.x > #self.canvas[1]
+
+	return not is_cell_pos_valid
+end
+
 function UI:refresh_canvas(cells_changed)
 	local canvas_buf_id = self.ids.canvas
 
 	for _, cell_data in ipairs(cells_changed) do
+		if not self:is_canvas_pos_valid { x = cell_data.x, y = cell_data.y } then goto skip end
+
 		local cell = self.canvas[cell_data.y][cell_data.x]
 
 		cell.bg = cell_data.bg
@@ -201,6 +213,8 @@ function UI:refresh_canvas(cells_changed)
 				virt_text_pos = "overlay",
 			}
 		)
+
+		::skip::
 	end
 
 	vim.bo[canvas_buf_id].modifiable = true
