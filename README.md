@@ -150,6 +150,7 @@ return {
     toolbar = { -- Toolbar options
         char = {
             tool_active = "↓", -- Character appended to the tool name when active
+            tool_inactive = " ", -- Character appended to the tool name when inactive
             current_color = { -- Characters for the current bg and fg blocks
                 fg = "█",
                 bg = " ",

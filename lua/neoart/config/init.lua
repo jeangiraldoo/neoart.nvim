@@ -15,6 +15,7 @@ return {
 	toolbar = {
 		char = {
 			tool_active = "↓",
+			tool_inactive = " ",
 			current_color = {
 				fg = "█",
 				bg = " ",

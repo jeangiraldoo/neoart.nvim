@@ -14,13 +14,18 @@ end
 
 function UI:refresh_toolbar(state)
 	local toolbar_config = require("neoart.config").toolbar
+	local char_config = toolbar_config.char
+
 	local buf = self.ids.toolbar
 	local ns = self.ids.namespace
 
 	vim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)
 
 	local current_tool_state = state.current.toolset[state.current.tool_name]
-	local tool_position = (state.current.is_active and toolbar_config.char.tool_active or "")
+
+	local tool_position = (
+		state.current.is_active and char_config.tool_active or char_config.tool_inactive
+	)
 
 	local first_line, second_line
 	do
